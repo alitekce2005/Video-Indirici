@@ -132,10 +132,11 @@ function validateURL(url) {
     url = url.trim();
     if (!url) return { valid: false, msg: 'URL alanı boş bırakılamaz.' };
 
+    // Kuralları çok daha esnek hale getirdik
     const patterns = {
-        instagram: /instagram\.com\/(p|reel|tv|stories|s|)\//,
-        youtube: /(youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/,
-        tiktok: /tiktok\.com\/@[\w.]+\/video\/\d+/
+        instagram: /instagram\.com/,
+        youtube: /(youtube\.com|youtu\.be)/,
+        tiktok: /tiktok\.com/
     };
 
     if (!patterns[currentPlatform].test(url)) {
@@ -805,3 +806,4 @@ function closeMobileMenuIfOpen() {
     }
 
 }
+
