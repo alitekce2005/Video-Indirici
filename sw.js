@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savewave-v2';
+const CACHE_NAME = 'savewave-v3';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -59,3 +59,4 @@ self.addEventListener('fetch', (event) => {
     );
 
 });
+
