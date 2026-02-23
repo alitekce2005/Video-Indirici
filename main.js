@@ -174,7 +174,7 @@ async function startDownload() {
             data = window._previewData;
             window._previewData = null;
         } else {
-            const apiEndpoint = `http://localhost:8000/api/download?url=${encodeURIComponent(url)}&media_type=${mediaType}&quality=${qualityVal}`;
+            const apiEndpoint = `/api/download?url=${encodeURIComponent(url)}&media_type=${mediaType}&quality=${qualityVal}`;
             const response = await fetch(apiEndpoint);
             data = await response.json();
             if (!response.ok) throw new Error(data.detail || "Bir hata oluştu.");
@@ -803,4 +803,5 @@ function closeMobileMenuIfOpen() {
         }, 200);
         if (btn) btn.classList.remove('open');
     }
+
 }
