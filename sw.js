@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savewave-v8';
+const CACHE_NAME = 'savewave-v9';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
