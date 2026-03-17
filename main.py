@@ -61,8 +61,9 @@ async def get_video_info(url: str, media_type: str = "video", quality: str = "72
         'quiet': True,
         'skip_download': True,
         'noplaylist': True,
-        'cookiefile': COOKIE_FILE,
-        'remote_components': ['ejs:github']
+        #'cookiefile': COOKIE_FILE,
+        'remote_components': ['ejs:github'],
+        'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
 
     try:
@@ -113,8 +114,9 @@ async def proxy_download(url: str, filename: str, media_type: str = "video", qua
         'format': fmt,
         'outtmpl': output_path,
         'postprocessors': postprocessors,
-        'cookiefile': COOKIE_FILE,
-        'remote_components': ['ejs:github']
+        #'cookiefile': COOKIE_FILE,
+        'remote_components': ['ejs:github'],
+        'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
 
     # ÇÖZÜM: Bulunulan klasörün tam yolunu (Absolute Path) alıp FFmpeg'i kesin olarak bul
@@ -208,8 +210,9 @@ async def clip_video(url: str, start: str = "0:00", end: str = "", quality: str 
         'format': fmt,
         'outtmpl': raw_path,
         'merge_output_format': 'mp4',
-        'cookiefile': COOKIE_FILE,
-        'remote_components': ['ejs:github']
+        #'cookiefile': COOKIE_FILE,
+        'remote_components': ['ejs:github'],
+        'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
     
     if os.path.exists("./ffmpeg.exe"):
@@ -295,8 +298,9 @@ async def download_thumbnail(url: str):
         'quiet': True,
         'skip_download': True,
         'noplaylist': True,
-        'cookiefile': COOKIE_FILE,
-        'remote_components': ['ejs:github']
+        #'cookiefile': COOKIE_FILE,
+        'remote_components': ['ejs:github'],
+        'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
 
     try:
@@ -333,12 +337,12 @@ async def download_thumbnail(url: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Fotoğraf alınamadı: {str(e)}")
-
+    
 @app.get("/api/debug")
 async def list_files():
     """Sunucudaki dosyalari listeler"""
     return {"files": os.listdir(BASE_DIR)}
-    
+
 # --- FRONTEND (ARAYÜZ) SUNUCU KODLARI ---
 @app.get("/")
 async def serve_index():
