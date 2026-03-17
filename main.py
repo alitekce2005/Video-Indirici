@@ -333,6 +333,11 @@ async def download_thumbnail(url: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Fotoğraf alınamadı: {str(e)}")
+
+@app.get("/api/debug")
+async def list_files():
+    """Sunucudaki dosyalari listeler"""
+    return {"files": os.listdir(BASE_DIR)}
     
 # --- FRONTEND (ARAYÜZ) SUNUCU KODLARI ---
 @app.get("/")
