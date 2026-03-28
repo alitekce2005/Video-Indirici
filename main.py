@@ -53,7 +53,7 @@ def build_ydl_opts_base(url: str) -> dict:
     opts = {
         'quiet': False,
         'noplaylist': True,
-        'impersonate': 'chrome',
+        'remote_components': ['ejs:github'],
         'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
     if os.path.exists(COOKIE_FILE):
@@ -165,8 +165,9 @@ async def proxy_download(url: str, filename: str, media_type: str = "video", qua
     
     if os.path.exists(ffmpeg_path):
         ydl_opts['ffmpeg_location'] = ffmpeg_path
+        print(f"✅ HARİKA! FFmpeg Bulundu: {ffmpeg_path}")
     else:
-        ydl_opts['ffmpeg_location'] = 'ffmpeg'
+        print(f"❌ DİKKAT! FFmpeg Bulunamadı! Aranan yer: {ffmpeg_path}")
 
     # ÇÖZÜM: Eğer indirilen şey ses (audio) değilse (yani videoyse) mp4 olarak birleştir
     if media_type != "audio":
@@ -248,10 +249,8 @@ async def clip_video(url: str, start: str = "0:00", end: str = "", quality: str 
     ydl_opts['outtmpl'] = raw_path
     ydl_opts['merge_output_format'] = 'mp4'
     
-    if os.path.exists("ffmpeg.exe"):
-        ydl_opts['ffmpeg_location'] = 'ffmpeg.exe'
-    else:
-        ydl_opts['ffmpeg_location'] = 'ffmpeg'
+    if os.path.exists("./ffmpeg.exe"):
+        ydl_opts['ffmpeg_location'] = './ffmpeg.exe'
 
     loop = asyncio.get_event_loop()
 
