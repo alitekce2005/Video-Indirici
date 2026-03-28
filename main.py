@@ -1,15 +1,7 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-import yt_dlp
-import urllib.parse
-import asyncio
-import os
-import tempfile
-import uuid
-import subprocess
 import httpx
 from fastapi.responses import FileResponse
+import os
+import subprocess
 import json
 import time
 import threading
@@ -20,11 +12,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_FILE = os.path.join(BASE_DIR, "cookies.txt")
 
 # ──────────────────────────────────────────
-# PO_TOKEN YÖNETİCİSİ
+# PO_TOKEN YÖNETİCİSİ VE TEMEL AYARLAR
 # ──────────────────────────────────────────
 _po_token_cache = {"token": None, "visitor_data": None, "ts": 0}
 _token_lock = threading.Lock()
-TOKEN_TTL = 3600  # 1 saat geçerli
+TOKEN_TTL = 3600
 
 def _refresh_po_token():
     try:
@@ -39,8 +31,6 @@ def _refresh_po_token():
                 _po_token_cache["visitor_data"] = data.get("visitorData")
                 _po_token_cache["ts"] = time.time()
                 print(f"✅ po_token yenilendi: {_po_token_cache['token'][:20]}...")
-        else:
-            print(f"❌ po_token alınamadı: {result.stderr}")
     except Exception as e:
         print(f"❌ po_token hatası: {e}")
 
@@ -53,20 +43,15 @@ def get_po_token():
     return _po_token_cache["token"], _po_token_cache["visitor_data"]
 
 def build_ydl_opts_base(url: str) -> dict:
-    """Her yt-dlp isteği için temel ayarları döndürür."""
     opts = {
         'quiet': False,
         'noplaylist': True,
         'remote_components': ['ejs:github'],
         'extractor_args': {'youtube': ['player_client=ios,android,web']}
     }
-
-    # Cookie dosyası varsa ekle
     if os.path.exists(COOKIE_FILE):
         opts['cookiefile'] = COOKIE_FILE
-        print("🍪 Cookie dosyası kullanılıyor.")
-
-    # YouTube URL'si ise po_token ekle
+    
     if "youtube.com" in url or "youtu.be" in url:
         token, visitor_data = get_po_token()
         if token and visitor_data:
@@ -75,8 +60,6 @@ def build_ydl_opts_base(url: str) -> dict:
                 f'po_token=web+{token}',
             ]
             opts['http_headers'] = {'X-Youtube-Identity-Token': visitor_data}
-            print("🔑 po_token eklendi.")
-
     return opts
 
 app.add_middleware(
@@ -169,14 +152,17 @@ async def proxy_download(url: str, filename: str, media_type: str = "video", qua
     ydl_opts['outtmpl'] = output_path
     ydl_opts['postprocessors'] = postprocessors
 
-    # Railway'de ffmpeg sistem PATH'inde olur, .exe olmaz
+    # ÇÖZÜM: Bulunulan klasörün tam yolunu (Absolute Path) alıp FFmpeg'i kesin olarak bul
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     ffmpeg_path = os.path.join(BASE_DIR, "ffmpeg.exe")
+    
     if os.path.exists(ffmpeg_path):
         ydl_opts['ffmpeg_location'] = ffmpeg_path
-        print(f"✅ FFmpeg bulundu: {ffmpeg_path}")
+        print(f"✅ HARİKA! FFmpeg Bulundu: {ffmpeg_path}")
     else:
-        print("ℹ️ ffmpeg sistem PATH'inden kullanılacak.")
+        print(f"❌ DİKKAT! FFmpeg Bulunamadı! Aranan yer: {ffmpeg_path}")
 
+    # ÇÖZÜM: Eğer indirilen şey ses (audio) değilse (yani videoyse) mp4 olarak birleştir
     if media_type != "audio":
         ydl_opts['merge_output_format'] = 'mp4'
 
@@ -255,10 +241,9 @@ async def clip_video(url: str, start: str = "0:00", end: str = "", quality: str 
     ydl_opts['format'] = fmt
     ydl_opts['outtmpl'] = raw_path
     ydl_opts['merge_output_format'] = 'mp4'
-
-    ffmpeg_path = os.path.join(BASE_DIR, "ffmpeg.exe")
-    if os.path.exists(ffmpeg_path):
-        ydl_opts['ffmpeg_location'] = ffmpeg_path
+    
+    if os.path.exists("./ffmpeg.exe"):
+        ydl_opts['ffmpeg_location'] = './ffmpeg.exe'
 
     loop = asyncio.get_event_loop()
 
@@ -280,6 +265,12 @@ async def clip_video(url: str, start: str = "0:00", end: str = "", quality: str 
         raw_file = await loop.run_in_executor(None, do_download)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Video indirilemedi: {str(e)}")
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    ffmpeg_path = os.path.join(BASE_DIR, "ffmpeg.exe")
+    
+    if os.path.exists(ffmpeg_path):
+        ydl_opts['ffmpeg_location'] = ffmpeg_path
 
     ffmpeg_bin = ffmpeg_path if os.path.exists(ffmpeg_path) else "ffmpeg"
     ffmpeg_cmd = [ffmpeg_bin, "-y", "-i", raw_file, "-ss", start_tc]
