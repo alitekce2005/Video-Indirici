@@ -1,4 +1,0 @@
-fastapi
-uvicorn
-yt-dlp>=2026.3.13
-httpx
